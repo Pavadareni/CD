@@ -50,54 +50,56 @@ def create_synthetic_wall_texture(size=(512, 512)):
 
 
 def create_synthetic_crack(size=(512, 512), complexity='medium'):
-    """
-    Create synthetic crack with realistic morphology
-    
-    Complexity levels:
-    - simple: Single straight line
-    - medium: Line with small branches
-    - complex: Multiple branches, curved
-    """
+
     h, w = size
     mask = np.zeros((h, w), dtype=np.uint8)
-    
-    # Random crack parameters
-    crack_width = np.random.randint(*config.SYNTHETIC_CONFIG['crack_width_range'])
-    
+
+    crack_width = max(
+        1,
+        np.random.randint(*config.SYNTHETIC_CONFIG['crack_width_range'])
+    )
+
     if complexity == 'simple':
-        # Single line
+
         x1, y1 = np.random.randint(50, 150), np.random.randint(100, h - 100)
         x2, y2 = np.random.randint(w - 150, w - 50), np.random.randint(100, h - 100)
+
         cv2.line(mask, (x1, y1), (x2, y2), 1, crack_width)
-    
+
     elif complexity == 'medium':
-        # Main crack with 1-2 branches
+
         x1, y1 = np.random.randint(50, 150), np.random.randint(100, h - 100)
         x2, y2 = np.random.randint(w // 2, w // 2 + 100), np.random.randint(100, h - 100)
         x3, y3 = np.random.randint(w - 150, w - 50), np.random.randint(100, h - 100)
-        
-        # Draw polyline
+
         pts = np.array([[x1, y1], [x2, y2], [x3, y3]], dtype=np.int32)
         cv2.polylines(mask, [pts], False, 1, crack_width)
-        
-        # Add small branch
+
         if np.random.random() > 0.5:
             branch_x = x2 + np.random.randint(-50, 50)
             branch_y = y2 + np.random.randint(-100, 100)
-            cv2.line(mask, (x2, y2), (branch_x, branch_y), 1, crack_width - 1)
-    
+
+            cv2.line(
+                mask,
+                (x2, y2),
+                (branch_x, branch_y),
+                1,
+                max(1, crack_width - 1)
+            )
+
     else:  # complex
-        # Create curved crack with multiple segments
+
         num_points = np.random.randint(4, 7)
         points = []
+
         for i in range(num_points):
             x = int(50 + (w - 100) * i / (num_points - 1) + np.random.randint(-50, 50))
             y = int(h // 2 + np.random.randint(-150, 150))
             points.append([x, y])
-        
+
         pts = np.array(points, dtype=np.int32)
         cv2.polylines(mask, [pts], False, 1, crack_width)
-    
+
     return mask
 
 
